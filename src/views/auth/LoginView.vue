@@ -3,8 +3,11 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
+          <span class="text-yellow-400">TO</span><span class="text-green-800">DO</span> List Web App
         </h2>
+        <h3 class="mt-6 text-center text-2xl font-extrabold text-gray-900">
+          Sign in to your account
+        </h3>
         <p class="mt-2 text-center text-sm text-gray-600">
           Or
           <router-link to="/register" class="font-medium text-primary hover:text-primary/90">
@@ -33,21 +36,7 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input id="remember-me" v-model="form.remember" name="remember-me" type="checkbox"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" />
-              <Label for="remember-me" class="ml-2 text-sm">
-                Remember me
-              </Label>
-            </div>
 
-            <div class="text-sm">
-              <a href="#" class="font-medium text-primary hover:text-primary/90">
-                Forgot your password?
-              </a>
-            </div>
-          </div>
 
           <Button type="submit" class="w-full" :disabled="loading">
             <div v-if="loading" class="flex items-center">
