@@ -3,6 +3,9 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <span class="text-yellow-400">TO</span><span class="text-green-800">DO</span> List Web App
+        </h2>
+        <h2 class="mt-6 text-center text-2xl font-extrabold text-gray-900">
           Create your account
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
@@ -64,22 +67,9 @@
             </div>
           </div>
 
-          <div class="flex items-center">
-            <input id="agree-terms" v-model="form.agreeTerms" name="agree-terms" type="checkbox" required
-              class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" />
-            <Label for="agree-terms" class="ml-2 text-sm">
-              I agree to the
-              <a href="#" class="font-medium text-primary hover:text-primary/90">
-                Terms of Service
-              </a>
-              and
-              <a href="#" class="font-medium text-primary hover:text-primary/90">
-                Privacy Policy
-              </a>
-            </Label>
-          </div>
 
-          <Button type="submit" class="w-full" :disabled="loading || !form.agreeTerms">
+
+          <Button type="submit" class="w-full" :disabled="loading">
             <div v-if="loading" class="flex items-center">
               <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               Creating account...
@@ -106,7 +96,6 @@ interface RegisterForm {
   email: string
   password: string
   password_confirmation: string
-  agreeTerms: boolean
 }
 
 const { register, loading, error } = useAuth()
@@ -118,7 +107,6 @@ const form = reactive<RegisterForm>({
   email: '',
   password: '',
   password_confirmation: '',
-  agreeTerms: false
 })
 
 const handleRegister = async () => {
