@@ -1,45 +1,350 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <span class="text-yellow-400">TO</span><span class="text-green-800">DO</span> List Web App
-          </div>
-
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-700">
-              Welcome, {{ user?.first_name + ' ' + user?.last_name }}!
-            </span>
-            <Button variant="outline" @click="handleLogout" :disabled="loading">
-              <div v-if="loading" class="flex items-center">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                Logging out...
-              </div>
-              <span v-else>Logout</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <DashboardHeader :user="auth.user" :loading="auth.loading" @logout="handleLogout" />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div class="px-4 sm:px-0">
+        <!-- Dashboard Title -->
+        <DashboardTitle @add-task="openCreateModal" />
 
+        <!-- Error State -->
+        <ErrorMessage :error="error" />
+
+        <!-- Tasks Display -->
+        <div v-if="tasks.length > 0" class="space-y-6">
+          <!-- Stats Cards -->
+          <StatsCards :tasks="tasks" :unique-categories="uniqueCategories" :due-soon-tasks="dueSoonTasks" />
+
+          <!-- Search and Filter Controls -->
+          <TaskFilters v-model:search-query="searchQuery" v-model:selected-category="selectedCategory"
+            v-model:selected-status="selectedStatus" v-model:selected-due-filter="selectedDueFilter"
+            :unique-categories="uniqueCategories" :has-active-filters="hasActiveFilters"
+            :filtered-tasks-count="filteredTasks.length" :total-tasks-count="tasks.length"
+            @clear-filters="clearFilters" />
+
+          <!-- Tasks Grid with Drag and Drop -->
+          <TaskGrid :filtered-tasks="filteredTasks" :has-active-filters="hasActiveFilters" :dragged-task="draggedTask"
+            :drag-over-index="dragOverIndex" @edit-task="openEditModal" @delete-task="deleteTask"
+            @toggle-complete="toggleTaskComplete" @drag-start="handleDragStart" @drag-end="handleDragEnd"
+            @drag-over="handleDragOver" @drop="handleDrop" @drag-enter="handleDragEnter"
+            @drag-leave="handleDragLeave" />
+
+          <!-- No Results Message -->
+          <NoResults v-if="filteredTasks.length === 0 && hasActiveFilters" @clear-filters="clearFilters" />
+        </div>
+
+        <!-- Empty State -->
+        <EmptyState v-else @add-task="openCreateModal" />
+      </div>
     </main>
+
+    <!-- Task Creation/Editing Modal -->
+    <TaskModal v-if="showModal" :is-editing="isEditing" v-model:task-form="taskForm" :categories="categories"
+      :submitting="submitting" @close="closeModal" @submit="submitTask" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
-import { Button } from '@/components/ui/button'
+import { dummyTasks, dummyCategories, type Task, type Category } from '@/data/dummyData'
 
-const { user, logout, loading } = useAuth()
+// Import all dashboard components
+import DashboardHeader from '@/components/dashboard/DashboardHeader.vue'
+import DashboardTitle from '@/components/dashboard/DashboardTitle.vue'
+import StatsCards from '@/components/dashboard/StatsCards.vue'
+import TaskFilters from '@/components/dashboard/TaskFilters.vue'
+import TaskGrid from '@/components/dashboard/TaskGrid.vue'
+import EmptyState from '@/components/dashboard/EmptyState.vue'
+import NoResults from '@/components/dashboard/NoResults.vue'
+import TaskModal from '@/components/dashboard/TaskModal.vue'
+import ErrorMessage from '@/components/dashboard/ErrorMessage.vue'
 
-const handleLogout = async () => {
-  await logout()
+const auth = useAuth()
+
+const tasks = ref<Task[]>([...dummyTasks])
+const categories = ref<Category[]>([...dummyCategories])
+const error = ref<string | null>(null)
+
+const showModal = ref(false)
+const isEditing = ref(false)
+const submitting = ref(false)
+const editingTaskId = ref<number | null>(null)
+
+const taskForm = ref({
+  title: '',
+  description: '',
+  category_id: '',
+  due_date: ''
+})
+
+const searchQuery = ref('')
+const selectedCategory = ref('')
+const selectedStatus = ref('')
+const selectedDueFilter = ref('')
+
+const draggedTask = ref<Task | null>(null)
+const draggedIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+const uniqueCategories = computed(() => {
+  const categoryNames = tasks.value.map(task => task.category.name)
+  return [...new Set(categoryNames)]
+})
+
+const dueSoonTasks = computed(() => {
+  const today = new Date()
+  const threeDaysFromNow = new Date(today.getTime() + (3 * 24 * 60 * 60 * 1000))
+
+  return tasks.value.filter(task => {
+    const dueDate = new Date(task.due_date)
+    return dueDate <= threeDaysFromNow && dueDate >= today && !task.completed
+  })
+})
+
+const filteredTasks = computed(() => {
+  let filtered = [...tasks.value]
+
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(task =>
+      task.title.toLowerCase().includes(query) ||
+      task.description.toLowerCase().includes(query)
+    )
+  }
+
+  if (selectedCategory.value) {
+    filtered = filtered.filter(task => task.category.name === selectedCategory.value)
+  }
+
+  if (selectedStatus.value) {
+    if (selectedStatus.value === 'completed') {
+      filtered = filtered.filter(task => task.completed)
+    } else if (selectedStatus.value === 'incomplete') {
+      filtered = filtered.filter(task => !task.completed)
+    }
+  }
+
+  if (selectedDueFilter.value) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    filtered = filtered.filter(task => {
+      const dueDate = new Date(task.due_date)
+      dueDate.setHours(0, 0, 0, 0)
+
+      switch (selectedDueFilter.value) {
+        case 'overdue':
+          return dueDate < today
+        case 'today':
+          return dueDate.getTime() === today.getTime()
+        case 'week':
+          const weekFromNow = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000))
+          return dueDate >= today && dueDate <= weekFromNow
+        case 'month':
+          const monthFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000))
+          return dueDate >= today && dueDate <= monthFromNow
+        default:
+          return true
+      }
+    })
+  }
+
+  return filtered
+})
+
+const hasActiveFilters = computed(() => {
+  return !!(searchQuery.value || selectedCategory.value || selectedStatus.value || selectedDueFilter.value)
+})
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  selectedCategory.value = ''
+  selectedStatus.value = ''
+  selectedDueFilter.value = ''
 }
 
+const openCreateModal = () => {
+  isEditing.value = false
+  editingTaskId.value = null
+  taskForm.value = {
+    title: '',
+    description: '',
+    category_id: '',
+    due_date: ''
+  }
+  showModal.value = true
+}
 
+const openEditModal = (task: Task) => {
+  isEditing.value = true
+  editingTaskId.value = task.id
+  taskForm.value = {
+    title: task.title,
+    description: task.description,
+    category_id: task.category.id.toString(),
+    due_date: task.due_date.split('T')[0]
+  }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  isEditing.value = false
+  editingTaskId.value = null
+}
+
+const submitTask = async () => {
+  submitting.value = true
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const selectedCategory = categories.value.find(cat => cat.id === parseInt(taskForm.value.category_id))
+
+    if (isEditing.value && editingTaskId.value) {
+      const taskIndex = tasks.value.findIndex(t => t.id === editingTaskId.value)
+      if (taskIndex !== -1 && selectedCategory) {
+        tasks.value[taskIndex] = {
+          ...tasks.value[taskIndex],
+          title: taskForm.value.title,
+          description: taskForm.value.description,
+          due_date: `${taskForm.value.due_date}T00:00:00.000000Z`,
+          category: selectedCategory
+        }
+      }
+    } else {
+      const newTask: Task = {
+        id: Math.max(...tasks.value.map(t => t.id)) + 1,
+        title: taskForm.value.title,
+        description: taskForm.value.description,
+        due_date: `${taskForm.value.due_date}T00:00:00.000000Z`,
+        completed: false,
+        user: tasks.value[0].user,
+        category: selectedCategory!
+      }
+      tasks.value.push(newTask)
+    }
+
+    closeModal()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'An error occurred'
+  } finally {
+    submitting.value = false
+  }
+}
+
+const toggleTaskComplete = async (task: Task) => {
+  try {
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    const taskIndex = tasks.value.findIndex(t => t.id === task.id)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex].completed = !tasks.value[taskIndex].completed
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'An error occurred'
+  }
+}
+
+const deleteTask = async (taskId: number) => {
+  if (!confirm('Are you sure you want to delete this task?')) {
+    return
+  }
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    tasks.value = tasks.value.filter(task => task.id !== taskId)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'An error occurred'
+  }
+}
+
+const handleDragStart = (event: DragEvent, task: Task, index: number) => {
+  if (hasActiveFilters.value) {
+    event.preventDefault()
+    return
+  }
+
+  draggedTask.value = task
+  draggedIndex.value = index
+
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/html', (event.target as HTMLElement).outerHTML)
+  }
+}
+
+const handleDragEnd = () => {
+  draggedTask.value = null
+  draggedIndex.value = null
+  dragOverIndex.value = null
+}
+
+const handleDragOver = (event: DragEvent) => {
+  if (hasActiveFilters.value || !draggedTask.value) {
+    return
+  }
+
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+const handleDrop = async (event: DragEvent, dropIndex: number) => {
+  event.preventDefault()
+  dragOverIndex.value = null
+
+  if (hasActiveFilters.value || !draggedTask.value || draggedIndex.value === null) {
+    return
+  }
+
+  if (draggedIndex.value === dropIndex) {
+    return
+  }
+
+  const tasksCopy = [...tasks.value]
+  const draggedTaskData = tasksCopy[draggedIndex.value]
+
+  tasksCopy.splice(draggedIndex.value, 1)
+  const newIndex = draggedIndex.value < dropIndex ? dropIndex - 1 : dropIndex
+  tasksCopy.splice(newIndex, 0, draggedTaskData)
+
+  tasks.value = tasksCopy
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 200))
+    console.log('Task order updated (simulated)')
+  } catch (err) {
+    console.error('Failed to update task order:', err)
+  }
+}
+
+const handleDragEnter = (event: DragEvent, index: number) => {
+  if (hasActiveFilters.value || !draggedTask.value) {
+    return
+  }
+  dragOverIndex.value = index
+}
+
+const handleDragLeave = (event: DragEvent) => {
+  const currentTarget = event.currentTarget as Element
+  const relatedTarget = event.relatedTarget as Element
+
+  if (!currentTarget?.contains(relatedTarget)) {
+    dragOverIndex.value = null
+  }
+}
+
+const handleLogout = async () => {
+  await auth.logout()
+}
+
+onMounted(() => {
+  console.log('Dashboard loaded with dummy data')
+})
 </script>
