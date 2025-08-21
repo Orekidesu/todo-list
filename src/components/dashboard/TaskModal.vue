@@ -33,7 +33,13 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-sm font-medium text-gray-700">Category</label>
+              <button type="button" @click="$emit('addCategory')"
+                class="text-sm text-green-600 hover:text-green-700 font-medium">
+                + Add New Category
+              </button>
+            </div>
             <select :value="taskForm.category_id"
               @change="$emit('update:taskForm', { ...taskForm, category_id: ($event.target as HTMLSelectElement).value })"
               required
@@ -92,6 +98,7 @@ defineProps<{
 defineEmits<{
   close: []
   submit: []
+  addCategory: []
   'update:taskForm': [value: TaskForm]
 }>()
 </script>
