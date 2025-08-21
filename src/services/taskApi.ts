@@ -151,4 +151,22 @@ export const categoryApi = {
       throw error
     }
   },
+
+  // Create a new category
+  async createCategory(name: string): Promise<Category> {
+    try {
+      const response = await api.post<ApiResponse<CategoryResponse>>('/categories', {
+        name,
+      })
+
+      const category = response.data.data
+      return {
+        id: category.id,
+        name: category.name,
+      }
+    } catch (error) {
+      console.error('Error creating category:', error)
+      throw error
+    }
+  },
 }
