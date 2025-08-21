@@ -7,7 +7,7 @@
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div class="px-4 sm:px-0">
         <!-- Dashboard Title -->
-        <DashboardTitle @add-task="openCreateModal" />
+        <DashboardTitle @add-task="openCreateModal" @add-category="openCategoryModal" />
 
         <!-- Error State -->
         <ErrorMessage :error="error" />
@@ -48,7 +48,11 @@
 
     <!-- Task Creation/Editing Modal -->
     <TaskModal v-if="showModal" :is-editing="isEditing" v-model:task-form="taskForm" :categories="categories"
-      :submitting="submitting" @close="closeModal" @submit="submitTask" />
+      :submitting="submitting" @close="closeModal" @submit="submitTask" @add-category="openCategoryModalFromTask" />
+
+    <!-- Category Creation Modal -->
+    <CategoryModal v-if="showCategoryModal" v-model:category-name="categoryForm.name" :submitting="categorySubmitting"
+      @close="closeCategoryModal" @submit="submitCategory" />
   </div>
 </template>
 
@@ -67,6 +71,7 @@ import TaskGrid from '@/components/dashboard/TaskGrid.vue'
 import EmptyState from '@/components/dashboard/EmptyState.vue'
 import NoResults from '@/components/dashboard/NoResults.vue'
 import TaskModal from '@/components/dashboard/TaskModal.vue'
+import CategoryModal from '@/components/dashboard/CategoryModal.vue'
 import ErrorMessage from '@/components/dashboard/ErrorMessage.vue'
 
 const auth = useAuth()
@@ -87,6 +92,14 @@ const taskForm = ref({
   category_id: '',
   due_date: ''
 })
+
+// Category modal state
+const showCategoryModal = ref(false)
+const categorySubmitting = ref(false)
+const categoryForm = ref({
+  name: ''
+})
+const isCreatingCategoryFromTask = ref(false)
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -225,6 +238,47 @@ const closeModal = () => {
   showModal.value = false
   isEditing.value = false
   editingTaskId.value = null
+}
+
+const openCategoryModal = () => {
+  isCreatingCategoryFromTask.value = false
+  categoryForm.value = {
+    name: ''
+  }
+  showCategoryModal.value = true
+}
+
+const openCategoryModalFromTask = () => {
+  isCreatingCategoryFromTask.value = true
+  categoryForm.value = {
+    name: ''
+  }
+  showCategoryModal.value = true
+}
+
+const closeCategoryModal = () => {
+  showCategoryModal.value = false
+  isCreatingCategoryFromTask.value = false
+}
+
+const submitCategory = async () => {
+  categorySubmitting.value = true
+
+  try {
+    const newCategory = await categoryApi.createCategory(categoryForm.value.name)
+    categories.value.push(newCategory)
+
+    // If creating category from task modal, select it automatically
+    if (isCreatingCategoryFromTask.value) {
+      taskForm.value.category_id = newCategory.id.toString()
+    }
+
+    closeCategoryModal()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to create category'
+  } finally {
+    categorySubmitting.value = false
+  }
 }
 
 const submitTask = async () => {
