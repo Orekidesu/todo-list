@@ -12,8 +12,14 @@
         <!-- Error State -->
         <ErrorMessage :error="error" />
 
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center items-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <span class="ml-2 text-gray-600">Loading tasks...</span>
+        </div>
+
         <!-- Tasks Display -->
-        <div v-if="tasks.length > 0" class="space-y-6">
+        <div v-else-if="tasks.length > 0" class="space-y-6">
           <!-- Stats Cards -->
           <StatsCards :tasks="tasks" :unique-categories="uniqueCategories" :due-soon-tasks="dueSoonTasks" />
 
@@ -36,7 +42,7 @@
         </div>
 
         <!-- Empty State -->
-        <EmptyState v-else @add-task="openCreateModal" />
+        <EmptyState v-else-if="!loading" @add-task="openCreateModal" />
       </div>
     </main>
 
@@ -49,7 +55,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
-import { dummyTasks, dummyCategories, type Task, type Category } from '@/data/dummyData'
+import { type Task, type Category } from '@/data/dummyData'
+import { taskApi, categoryApi } from '@/services/taskApi'
 
 // Import all dashboard components
 import DashboardHeader from '@/components/dashboard/DashboardHeader.vue'
@@ -64,9 +71,10 @@ import ErrorMessage from '@/components/dashboard/ErrorMessage.vue'
 
 const auth = useAuth()
 
-const tasks = ref<Task[]>([...dummyTasks])
-const categories = ref<Category[]>([...dummyCategories])
+const tasks = ref<Task[]>([])
+const categories = ref<Category[]>([])
 const error = ref<string | null>(null)
+const loading = ref(true)
 
 const showModal = ref(false)
 const isEditing = ref(false)
@@ -166,6 +174,29 @@ const clearFilters = () => {
   selectedDueFilter.value = ''
 }
 
+// API Functions
+const fetchTasks = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    tasks.value = await taskApi.getTasks()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to fetch tasks'
+    console.error('Error fetching tasks:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchCategories = async () => {
+  try {
+    categories.value = await categoryApi.getCategories()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to fetch categories'
+    console.error('Error fetching categories:', err)
+  }
+}
+
 const openCreateModal = () => {
   isEditing.value = false
   editingTaskId.value = null
@@ -200,37 +231,29 @@ const submitTask = async () => {
   submitting.value = true
 
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    const selectedCategory = categories.value.find(cat => cat.id === parseInt(taskForm.value.category_id))
+    const taskData = {
+      title: taskForm.value.title,
+      description: taskForm.value.description,
+      due_date: taskForm.value.due_date,
+      category_id: parseInt(taskForm.value.category_id)
+    }
 
     if (isEditing.value && editingTaskId.value) {
+      // Update existing task
+      const updatedTask = await taskApi.updateTask(editingTaskId.value, taskData)
       const taskIndex = tasks.value.findIndex(t => t.id === editingTaskId.value)
-      if (taskIndex !== -1 && selectedCategory) {
-        tasks.value[taskIndex] = {
-          ...tasks.value[taskIndex],
-          title: taskForm.value.title,
-          description: taskForm.value.description,
-          due_date: `${taskForm.value.due_date}T00:00:00.000000Z`,
-          category: selectedCategory
-        }
+      if (taskIndex !== -1) {
+        tasks.value[taskIndex] = updatedTask
       }
     } else {
-      const newTask: Task = {
-        id: Math.max(...tasks.value.map(t => t.id)) + 1,
-        title: taskForm.value.title,
-        description: taskForm.value.description,
-        due_date: `${taskForm.value.due_date}T00:00:00.000000Z`,
-        completed: false,
-        user: tasks.value[0].user,
-        category: selectedCategory!
-      }
+      // Create new task
+      const newTask = await taskApi.createTask(taskData)
       tasks.value.push(newTask)
     }
 
     closeModal()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'An error occurred'
+    error.value = err instanceof Error ? err.message : 'Failed to save task'
   } finally {
     submitting.value = false
   }
@@ -238,14 +261,13 @@ const submitTask = async () => {
 
 const toggleTaskComplete = async (task: Task) => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 200))
-
+    const updatedTask = await taskApi.toggleTaskComplete(task.id, !task.completed)
     const taskIndex = tasks.value.findIndex(t => t.id === task.id)
     if (taskIndex !== -1) {
-      tasks.value[taskIndex].completed = !tasks.value[taskIndex].completed
+      tasks.value[taskIndex] = updatedTask
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'An error occurred'
+    error.value = err instanceof Error ? err.message : 'Failed to update task status'
   }
 }
 
@@ -255,11 +277,10 @@ const deleteTask = async (taskId: number) => {
   }
 
   try {
-    await new Promise(resolve => setTimeout(resolve, 200))
-
+    await taskApi.deleteTask(taskId)
     tasks.value = tasks.value.filter(task => task.id !== taskId)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'An error occurred'
+    error.value = err instanceof Error ? err.message : 'Failed to delete task'
   }
 }
 
@@ -344,7 +365,12 @@ const handleLogout = async () => {
   await auth.logout()
 }
 
-onMounted(() => {
-  console.log('Dashboard loaded with dummy data')
+onMounted(async () => {
+  console.log('Dashboard loading...')
+  await Promise.all([
+    fetchTasks(),
+    fetchCategories()
+  ])
+  console.log('Dashboard loaded with API data')
 })
 </script>
