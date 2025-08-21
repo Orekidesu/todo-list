@@ -13,6 +13,7 @@ export const useAuth = () => {
       toast({
         title: 'Success!',
         description: 'Successfully signed in. Welcome back!',
+        variant: 'success',
       })
       router.push('/dashboard')
     } else {
@@ -37,6 +38,7 @@ export const useAuth = () => {
       toast({
         title: 'Account created!',
         description: 'Your account has been created successfully. Welcome!',
+        variant: 'success',
       })
       router.push('/dashboard')
     } else {
@@ -54,6 +56,7 @@ export const useAuth = () => {
     toast({
       title: 'Signed out',
       description: 'You have been successfully signed out. See you next time!',
+      variant: 'success',
     })
     router.push('/login')
   }
