@@ -35,14 +35,28 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: true }
     } catch (err: unknown) {
+      // Enhanced error handling to extract the message from API response
+      const errorResponse = err as {
+        response?: {
+          data?: {
+            message?: string
+            errors?: Record<string, string[]>
+          }
+          status?: number
+        }
+      }
+
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-            'Login failed'
+        errorResponse?.response?.data?.message ||
+        (err instanceof Error ? err.message : null) ||
+        `Request failed with status ${errorResponse?.response?.status || 'unknown'}`
 
       error.value = errorMessage
-      return { success: false, error: error.value }
+      return {
+        success: false,
+        error: error.value,
+        errors: errorResponse?.response?.data?.errors,
+      }
     } finally {
       loading.value = false
     }
