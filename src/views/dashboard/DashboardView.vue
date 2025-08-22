@@ -1,211 +1,430 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
-          </div>
-
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-700">
-              Welcome, {{ user?.first_name + ' ' + user?.last_name }}!
-            </span>
-            <Button variant="outline" @click="handleLogout" :disabled="loading">
-              <div v-if="loading" class="flex items-center">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                Logging out...
-              </div>
-              <span v-else>Logout</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <DashboardHeader :user="auth.user" :loading="auth.loading" @logout="handleLogout" />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div class="px-4 py-6 sm:px-0">
-        <!-- Welcome Section -->
-        <Card class="mb-6">
-          <div class="p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">
-              Welcome to your dashboard!
-            </h2>
-            <p class="text-gray-600">
-              You have successfully logged in. This is a protected page that requires authentication.
-            </p>
-          </div>
-        </Card>
+      <div class="px-4 sm:px-0">
+        <!-- Dashboard Title -->
+        <DashboardTitle @add-task="openCreateModal" @add-category="openCategoryModal" />
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card>
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                    <dd class="text-lg font-medium text-gray-900">1,234</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </Card>
+        <!-- Error State -->
+        <ErrorMessage :error="error" />
 
-          <Card>
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Revenue</dt>
-                    <dd class="text-lg font-medium text-gray-900">$12,345</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Performance</dt>
-                    <dd class="text-lg font-medium text-gray-900">98.5%</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Issues</dt>
-                    <dd class="text-lg font-medium text-gray-900">3</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </Card>
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center items-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <span class="ml-2 text-gray-600">Loading tasks...</span>
         </div>
 
-        <!-- User Profile Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <div class="p-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Profile Information</h3>
-              <div class="space-y-3">
-                <div>
-                  <Label class="text-sm font-medium text-gray-500">Name</Label>
-                  <p class="mt-1 text-sm text-gray-900">{{ user?.first_name + ' ' + user?.last_name }}</p>
-                </div>
-                <div>
-                  <Label class="text-sm font-medium text-gray-500">Email</Label>
-                  <p class="mt-1 text-sm text-gray-900">{{ user?.email }}</p>
-                </div>
-                <div>
-                  <Label class="text-sm font-medium text-gray-500">Account Created</Label>
-                  <p class="mt-1 text-sm text-gray-900">{{ formatDate(user?.created_at) }}</p>
-                </div>
-                <div>
-                  <Label class="text-sm font-medium text-gray-500">Last Updated</Label>
-                  <p class="mt-1 text-sm text-gray-900">{{ formatDate(user?.updated_at) }}</p>
-                </div>
-              </div>
-            </div>
-          </Card>
+        <!-- Tasks Display -->
+        <div v-else-if="tasks.length > 0" class="space-y-6">
+          <!-- Stats Cards -->
+          <StatsCards :tasks="tasks" :unique-categories="uniqueCategories" :due-soon-tasks="dueSoonTasks" />
 
-          <Card>
-            <div class="p-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-              <div class="space-y-3">
-                <Button variant="outline" class="w-full justify-start">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit Profile
-                </Button>
-                <Button variant="outline" class="w-full justify-start">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Account Settings
-                </Button>
-                <Button variant="outline" class="w-full justify-start">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Generate Report
-                </Button>
-              </div>
-            </div>
-          </Card>
+          <!-- Search and Filter Controls -->
+          <TaskFilters v-model:search-query="searchQuery" v-model:selected-category="selectedCategory"
+            v-model:selected-status="selectedStatus" v-model:selected-due-filter="selectedDueFilter"
+            :unique-categories="uniqueCategories" :has-active-filters="hasActiveFilters"
+            :filtered-tasks-count="filteredTasks.length" :total-tasks-count="tasks.length"
+            @clear-filters="clearFilters" />
+
+          <!-- Tasks Grid with Drag and Drop -->
+          <TaskGrid :filtered-tasks="filteredTasks" :has-active-filters="hasActiveFilters" :dragged-task="draggedTask"
+            :drag-over-index="dragOverIndex" @edit-task="openEditModal" @delete-task="deleteTask"
+            @toggle-complete="toggleTaskComplete" @drag-start="handleDragStart" @drag-end="handleDragEnd"
+            @drag-over="handleDragOver" @drop="handleDrop" @drag-enter="handleDragEnter"
+            @drag-leave="handleDragLeave" />
+
+          <!-- No Results Message -->
+          <NoResults v-if="filteredTasks.length === 0 && hasActiveFilters" @clear-filters="clearFilters" />
         </div>
+
+        <!-- Empty State -->
+        <EmptyState v-else-if="!loading" @add-task="openCreateModal" />
       </div>
     </main>
+
+    <!-- Task Creation/Editing Modal -->
+    <TaskModal v-if="showModal" :is-editing="isEditing" v-model:task-form="taskForm" :categories="categories"
+      :submitting="submitting" @close="closeModal" @submit="submitTask" @add-category="openCategoryModalFromTask" />
+
+    <!-- Category Creation Modal -->
+    <CategoryModal v-if="showCategoryModal" v-model:category-name="categoryForm.name" :submitting="categorySubmitting"
+      @close="closeCategoryModal" @submit="submitCategory" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+import { type Task, type Category } from '@/data/dummyData'
+import { taskApi, categoryApi } from '@/services/taskApi'
 
-const { user, logout, loading } = useAuth()
+// Import all dashboard components
+import DashboardHeader from '@/components/dashboard/DashboardHeader.vue'
+import DashboardTitle from '@/components/dashboard/DashboardTitle.vue'
+import StatsCards from '@/components/dashboard/StatsCards.vue'
+import TaskFilters from '@/components/dashboard/TaskFilters.vue'
+import TaskGrid from '@/components/dashboard/TaskGrid.vue'
+import EmptyState from '@/components/dashboard/EmptyState.vue'
+import NoResults from '@/components/dashboard/NoResults.vue'
+import TaskModal from '@/components/dashboard/TaskModal.vue'
+import CategoryModal from '@/components/dashboard/CategoryModal.vue'
+import ErrorMessage from '@/components/dashboard/ErrorMessage.vue'
+
+const auth = useAuth()
+
+const tasks = ref<Task[]>([])
+const categories = ref<Category[]>([])
+const error = ref<string | null>(null)
+const loading = ref(true)
+
+const showModal = ref(false)
+const isEditing = ref(false)
+const submitting = ref(false)
+const editingTaskId = ref<number | null>(null)
+
+const taskForm = ref({
+  title: '',
+  description: '',
+  category_id: '',
+  due_date: ''
+})
+
+// Category modal state
+const showCategoryModal = ref(false)
+const categorySubmitting = ref(false)
+const categoryForm = ref({
+  name: ''
+})
+const isCreatingCategoryFromTask = ref(false)
+
+const searchQuery = ref('')
+const selectedCategory = ref('')
+const selectedStatus = ref('')
+const selectedDueFilter = ref('')
+
+const draggedTask = ref<Task | null>(null)
+const draggedIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+const uniqueCategories = computed(() => {
+  const categoryNames = tasks.value.map(task => task.category.name)
+  return [...new Set(categoryNames)]
+})
+
+const dueSoonTasks = computed(() => {
+  const today = new Date()
+  const threeDaysFromNow = new Date(today.getTime() + (3 * 24 * 60 * 60 * 1000))
+
+  return tasks.value.filter(task => {
+    const dueDate = new Date(task.due_date)
+    return dueDate <= threeDaysFromNow && dueDate >= today && !task.completed
+  })
+})
+
+const filteredTasks = computed(() => {
+  let filtered = [...tasks.value]
+
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(task =>
+      task.title.toLowerCase().includes(query) ||
+      task.description.toLowerCase().includes(query)
+    )
+  }
+
+  if (selectedCategory.value) {
+    filtered = filtered.filter(task => task.category.name === selectedCategory.value)
+  }
+
+  if (selectedStatus.value) {
+    if (selectedStatus.value === 'completed') {
+      filtered = filtered.filter(task => task.completed)
+    } else if (selectedStatus.value === 'incomplete') {
+      filtered = filtered.filter(task => !task.completed)
+    }
+  }
+
+  if (selectedDueFilter.value) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    filtered = filtered.filter(task => {
+      const dueDate = new Date(task.due_date)
+      dueDate.setHours(0, 0, 0, 0)
+
+      switch (selectedDueFilter.value) {
+        case 'overdue':
+          return dueDate < today
+        case 'today':
+          return dueDate.getTime() === today.getTime()
+        case 'week':
+          const weekFromNow = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000))
+          return dueDate >= today && dueDate <= weekFromNow
+        case 'month':
+          const monthFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000))
+          return dueDate >= today && dueDate <= monthFromNow
+        default:
+          return true
+      }
+    })
+  }
+
+  return filtered
+})
+
+const hasActiveFilters = computed(() => {
+  return !!(searchQuery.value || selectedCategory.value || selectedStatus.value || selectedDueFilter.value)
+})
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  selectedCategory.value = ''
+  selectedStatus.value = ''
+  selectedDueFilter.value = ''
+}
+
+// API Functions
+const fetchTasks = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    tasks.value = await taskApi.getTasks()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to fetch tasks'
+    console.error('Error fetching tasks:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchCategories = async () => {
+  try {
+    categories.value = await categoryApi.getCategories()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to fetch categories'
+    console.error('Error fetching categories:', err)
+  }
+}
+
+const openCreateModal = () => {
+  isEditing.value = false
+  editingTaskId.value = null
+  taskForm.value = {
+    title: '',
+    description: '',
+    category_id: '',
+    due_date: ''
+  }
+  showModal.value = true
+}
+
+const openEditModal = (task: Task) => {
+  isEditing.value = true
+  editingTaskId.value = task.id
+  taskForm.value = {
+    title: task.title,
+    description: task.description,
+    category_id: task.category.id.toString(),
+    due_date: task.due_date.split('T')[0]
+  }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  isEditing.value = false
+  editingTaskId.value = null
+}
+
+const openCategoryModal = () => {
+  isCreatingCategoryFromTask.value = false
+  categoryForm.value = {
+    name: ''
+  }
+  showCategoryModal.value = true
+}
+
+const openCategoryModalFromTask = () => {
+  isCreatingCategoryFromTask.value = true
+  categoryForm.value = {
+    name: ''
+  }
+  showCategoryModal.value = true
+}
+
+const closeCategoryModal = () => {
+  showCategoryModal.value = false
+  isCreatingCategoryFromTask.value = false
+}
+
+const submitCategory = async () => {
+  categorySubmitting.value = true
+
+  try {
+    const newCategory = await categoryApi.createCategory(categoryForm.value.name)
+    categories.value.push(newCategory)
+
+    // If creating category from task modal, select it automatically
+    if (isCreatingCategoryFromTask.value) {
+      taskForm.value.category_id = newCategory.id.toString()
+    }
+
+    closeCategoryModal()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to create category'
+  } finally {
+    categorySubmitting.value = false
+  }
+}
+
+const submitTask = async () => {
+  submitting.value = true
+
+  try {
+    const taskData = {
+      title: taskForm.value.title,
+      description: taskForm.value.description,
+      due_date: taskForm.value.due_date,
+      category_id: parseInt(taskForm.value.category_id)
+    }
+
+    if (isEditing.value && editingTaskId.value) {
+      // Update existing task
+      const updatedTask = await taskApi.updateTask(editingTaskId.value, taskData)
+      const taskIndex = tasks.value.findIndex(t => t.id === editingTaskId.value)
+      if (taskIndex !== -1) {
+        tasks.value[taskIndex] = updatedTask
+      }
+    } else {
+      // Create new task
+      const newTask = await taskApi.createTask(taskData)
+      tasks.value.push(newTask)
+    }
+
+    closeModal()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to save task'
+  } finally {
+    submitting.value = false
+  }
+}
+
+const toggleTaskComplete = async (task: Task) => {
+  try {
+    const updatedTask = await taskApi.toggleTaskComplete(task.id, !task.completed)
+    const taskIndex = tasks.value.findIndex(t => t.id === task.id)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex] = updatedTask
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to update task status'
+  }
+}
+
+const deleteTask = async (taskId: number) => {
+  if (!confirm('Are you sure you want to delete this task?')) {
+    return
+  }
+
+  try {
+    await taskApi.deleteTask(taskId)
+    tasks.value = tasks.value.filter(task => task.id !== taskId)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to delete task'
+  }
+}
+
+const handleDragStart = (event: DragEvent, task: Task, index: number) => {
+  if (hasActiveFilters.value) {
+    event.preventDefault()
+    return
+  }
+
+  draggedTask.value = task
+  draggedIndex.value = index
+
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/html', (event.target as HTMLElement).outerHTML)
+  }
+}
+
+const handleDragEnd = () => {
+  draggedTask.value = null
+  draggedIndex.value = null
+  dragOverIndex.value = null
+}
+
+const handleDragOver = (event: DragEvent) => {
+  if (hasActiveFilters.value || !draggedTask.value) {
+    return
+  }
+
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+const handleDrop = async (event: DragEvent, dropIndex: number) => {
+  event.preventDefault()
+  dragOverIndex.value = null
+
+  if (hasActiveFilters.value || !draggedTask.value || draggedIndex.value === null) {
+    return
+  }
+
+  if (draggedIndex.value === dropIndex) {
+    return
+  }
+
+  const tasksCopy = [...tasks.value]
+  const draggedTaskData = tasksCopy[draggedIndex.value]
+
+  tasksCopy.splice(draggedIndex.value, 1)
+  const newIndex = draggedIndex.value < dropIndex ? dropIndex - 1 : dropIndex
+  tasksCopy.splice(newIndex, 0, draggedTaskData)
+
+  tasks.value = tasksCopy
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 200))
+    console.log('Task order updated (simulated)')
+  } catch (err) {
+    console.error('Failed to update task order:', err)
+  }
+}
+
+const handleDragEnter = (event: DragEvent, index: number) => {
+  if (hasActiveFilters.value || !draggedTask.value) {
+    return
+  }
+  dragOverIndex.value = index
+}
+
+const handleDragLeave = (event: DragEvent) => {
+  const currentTarget = event.currentTarget as Element
+  const relatedTarget = event.relatedTarget as Element
+
+  if (!currentTarget?.contains(relatedTarget)) {
+    dragOverIndex.value = null
+  }
+}
 
 const handleLogout = async () => {
-  await logout()
+  await auth.logout()
 }
 
-const formatDate = (dateString: string | undefined) => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
+onMounted(async () => {
+  console.log('Dashboard loading...')
+  await Promise.all([
+    fetchTasks(),
+    fetchCategories()
+  ])
+  console.log('Dashboard loaded with API data')
+})
 </script>
