@@ -1,39 +1,101 @@
-# todo-list
+# TODO List Application
 
-This template should help get you started developing with Vue 3 in Vite.
+A modern, responsive TODO list application built with Vue 3, TypeScript, and Tailwind CSS. Features a clean UI with dark/light mode support, toast notifications, and category-based task organization.
 
-## Recommended IDE Setup
+## 🚀 Features
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- ✅ **Task Management**: Create, edit, delete, and mark tasks as complete
+- 🏷️ **Categories**: Organize tasks by categories (Work, Lifestyle, Personal, Health, Learning)
+- 🔔 **Toast Notifications**: User feedback with shadcn toast components
+- 📱 **Responsive Design**: Mobile-first approach with Tailwind CSS
+- 🎨 **Modern UI**: Clean interface with class-variance-authority for component variants
 
-## Type Support for `.vue` Imports in TS
+## 🛠️ Tech Stack
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+- **Frontend**: Vue 3 (Composition API), TypeScript
+- **Styling**: Tailwind CSS, PostCSS
+- **UI Components**: Custom components and shadcn premade components
+- **Icons**: Lucide Vue Next
+- **Build Tool**: Vite
+- **Backend**: Laravel API (separate repository)
 
-## Customize configuration
+## 📋 Prerequisites
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- [Node.js](https://nodejs.org/) (version 16+)
+- Laravel API: Clone from https://github.com/Orekidesu/todo_api
 
-## Project Setup
+## ⚡ Quick Start
 
-```sh
-npm install
+1. **Install dependencies**
+
+   ```sh
+   npm install
+   ```
+
+2. **Environment Setup**
+
+   ```sh
+   cp .env.development .env
+   # Update VITE_API_BASE_URL if needed (default: http://127.0.0.1:8000/api/v1)
+   ```
+
+3. **Start development server**
+
+   ```sh
+   npm run dev
+   ```
+
+4. **Open your browser** at `http://localhost:5173`
+
+## 📁 Project Structure
+
+```
+src/
+├── components/
+│   └── ui/
+│       └── toast/          # Toast notification components
+├── data/
+│   └── dummyData.ts        # Sample todo data
+├── lib/
+│   └── utils.ts            # Utility functions
+├── style.css               # Global styles & CSS variables
+└── main.ts                 # Application entry point
 ```
 
-### Compile and Hot-Reload for Development
+## 🔧 Available Scripts
 
 ```sh
-npm run dev
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run lint     # Run ESLint
+npm run preview  # Preview production build
 ```
 
-### Type-Check, Compile and Minify for Production
+## 🌐 Environment Variables
 
-```sh
-npm run build
+Create a `.env` file:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1 (the most important part, the rest are just add ons)
+VITE_APP_NAME=TODO List App
+VITE_APP_ENV=development
+VITE_API_VERSION=v1
+VITE_ENABLE_DEBUG=true
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+## 🎯 API Integration
 
-```sh
-npm run lint
-```
+The app is configured to work with a Laravel backend API. Ensure the Laravel API is running on the configured URL before starting the frontend.
+
+## 🔧 IDE Setup
+
+**Recommended**: [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+
+⚠️ **Important**: Disable Vetur extension if installed to avoid conflicts.
+
+## 📱 Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
