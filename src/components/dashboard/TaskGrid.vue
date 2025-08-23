@@ -22,9 +22,13 @@
 
         <!-- Category Badge and Actions -->
         <div class="flex items-center justify-between mb-3">
-          <span
+          <span v-if="task.category"
             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
             {{ task.category.name }}
+          </span>
+          <span v-else
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+            No Category
           </span>
           <div class="flex items-center space-x-2">
             <span v-if="task.completed" class="text-xs text-green-600 font-medium">✓ Completed</span>

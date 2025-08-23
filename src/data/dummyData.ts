@@ -20,7 +20,7 @@ export interface Task {
   due_date: string
   completed: boolean
   user: User
-  category: Category
+  category: Category | null
 }
 
 export const dummyUser: User = {

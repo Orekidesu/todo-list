@@ -49,7 +49,7 @@ export const taskApi = {
     title: string
     description: string
     due_date: string
-    category_id: number
+    category_id: number | null
   }): Promise<Task> {
     try {
       const response = await api.post<ApiResponse<TaskResponse>>('/tasks', {
@@ -80,7 +80,7 @@ export const taskApi = {
       title: string
       description: string
       due_date: string
-      category_id: number
+      category_id: number | null
     },
   ): Promise<Task> {
     try {

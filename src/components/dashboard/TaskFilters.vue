@@ -21,6 +21,7 @@
           @change="$emit('update:selectedCategory', ($event.target as HTMLSelectElement).value)"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
           <option value="">All Categories</option>
+          <option value="__no_category__">No Category</option>
           <option v-for="category in uniqueCategories" :key="category" :value="category">
             {{ category }}
           </option>
@@ -67,7 +68,7 @@
       </span>
       <span v-if="selectedCategory"
         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        Category: {{ selectedCategory }}
+        Category: {{ selectedCategory === '__no_category__' ? 'No Category' : selectedCategory }}
         <button @click="$emit('update:selectedCategory', '')"
           class="ml-1 text-green-600 hover:text-green-800">×</button>
       </span>

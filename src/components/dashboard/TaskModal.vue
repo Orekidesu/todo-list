@@ -34,7 +34,7 @@
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-sm font-medium text-gray-700">Category</label>
+              <label class="block text-sm font-medium text-gray-700">Category (Optional)</label>
               <button type="button" @click="$emit('addCategory')"
                 class="text-sm text-green-600 hover:text-green-700 font-medium">
                 + Add New Category
@@ -42,9 +42,8 @@
             </div>
             <select :value="taskForm.category_id"
               @change="$emit('update:taskForm', { ...taskForm, category_id: ($event.target as HTMLSelectElement).value })"
-              required
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-              <option value="">Select a category</option>
+              <option value="">No category</option>
               <option v-for="category in categories" :key="category.id" :value="category.id">
                 {{ category.name }}
               </option>

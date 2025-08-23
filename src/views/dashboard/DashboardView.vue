@@ -111,7 +111,9 @@ const draggedIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
 
 const uniqueCategories = computed(() => {
-  const categoryNames = tasks.value.map(task => task.category.name)
+  const categoryNames = tasks.value
+    .filter(task => task.category !== null)
+    .map(task => task.category!.name)
   return [...new Set(categoryNames)]
 })
 
@@ -137,7 +139,11 @@ const filteredTasks = computed(() => {
   }
 
   if (selectedCategory.value) {
-    filtered = filtered.filter(task => task.category.name === selectedCategory.value)
+    if (selectedCategory.value === '__no_category__') {
+      filtered = filtered.filter(task => task.category === null)
+    } else {
+      filtered = filtered.filter(task => task.category?.name === selectedCategory.value)
+    }
   }
 
   if (selectedStatus.value) {
@@ -228,7 +234,7 @@ const openEditModal = (task: Task) => {
   taskForm.value = {
     title: task.title,
     description: task.description,
-    category_id: task.category.id.toString(),
+    category_id: task.category ? task.category.id.toString() : '',
     due_date: task.due_date.split('T')[0]
   }
   showModal.value = true
@@ -289,7 +295,7 @@ const submitTask = async () => {
       title: taskForm.value.title,
       description: taskForm.value.description,
       due_date: taskForm.value.due_date,
-      category_id: parseInt(taskForm.value.category_id)
+      category_id: taskForm.value.category_id ? parseInt(taskForm.value.category_id) : null
     }
 
     if (isEditing.value && editingTaskId.value) {
