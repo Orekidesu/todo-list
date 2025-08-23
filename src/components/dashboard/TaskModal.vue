@@ -54,7 +54,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
             <input :value="taskForm.due_date"
               @input="$emit('update:taskForm', { ...taskForm, due_date: ($event.target as HTMLInputElement).value })"
-              type="date" required
+              type="date" required :min="todayDate"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
           </div>
 
@@ -77,6 +77,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import type { Category } from '@/data/dummyData'
 
@@ -100,4 +101,10 @@ defineEmits<{
   addCategory: []
   'update:taskForm': [value: TaskForm]
 }>()
+
+// Get today's date in YYYY-MM-DD format for the min attribute
+const todayDate = computed(() => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+})
 </script>
