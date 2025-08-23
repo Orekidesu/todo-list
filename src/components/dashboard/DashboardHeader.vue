@@ -1,11 +1,10 @@
 <template>
   <header class="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
     <div class="container mx-auto flex h-16 max-w-screen-2xl items-center px-4 sm:px-6 lg:px-8">
-      <!-- Logo/Brand -->
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-2">
 
-          <div class="hidden sm:block">
+          <div class="">
             <h1 class="text-xl font-bold">
               <span class="text-yellow-400">TO</span><span class="text-green-800">DO</span> List Web App
             </h1>
@@ -15,7 +14,6 @@
 
       <!-- Desktop Navigation -->
       <div class="ml-auto flex items-center space-x-4">
-        <!-- User Info - Hidden on small screens -->
         <div class="hidden md:flex items-center space-x-3">
           <div
             class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
@@ -31,7 +29,6 @@
           </div>
         </div>
 
-        <!-- Mobile User Avatar - Visible on small screens -->
         <div class="md:hidden flex items-center">
           <Button variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0">
             <div
@@ -77,10 +74,7 @@
           </p>
           <p class="text-xs text-gray-500">{{ user?.email }}</p>
         </div>
-        <div class="flex items-center space-x-2">
-          <div class="h-2 w-2 rounded-full bg-green-500"></div>
-          <span class="text-xs text-gray-500">Online</span>
-        </div>
+
       </div>
     </div>
   </header>
