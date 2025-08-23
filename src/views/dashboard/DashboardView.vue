@@ -114,6 +114,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { toast } from '@/components/ui/toast'
 
 const auth = useAuth()
 
@@ -332,6 +333,10 @@ const openCategoryModalFromManager = () => {
 
 const deleteCategory = async (categoryId: number) => {
   try {
+    const categoryToDelete = categories.value.find(category => category.id === categoryId)
+    const categoryName = categoryToDelete?.name || 'Unknown Category'
+    const tasksWithCategory = tasks.value.filter(task => task.category?.id === categoryId)
+
     await categoryApi.deleteCategory(categoryId)
 
     // Remove category from local state
@@ -351,8 +356,19 @@ const deleteCategory = async (categoryId: number) => {
       selectedCategory.value = ''
     }
 
+    toast({
+      title: "Category Deleted",
+      description: `"${categoryName}" has been deleted. ${tasksWithCategory.length} task${tasksWithCategory.length !== 1 ? 's' : ''} ${tasksWithCategory.length !== 1 ? 'have' : 'has'} been uncategorized.`,
+      variant: "success",
+    })
+
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to delete category'
+    toast({
+      title: "Error",
+      description: error.value,
+      variant: "destructive",
+    })
   }
 }
 
@@ -370,8 +386,17 @@ const submitCategory = async () => {
     }
 
     closeCategoryModal()
+    toast({
+      title: "Category Created",
+      description: `"${trimmedName}" has been added to your categories.`,
+    })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to create category'
+    toast({
+      title: "Error",
+      description: error.value,
+      variant: "destructive",
+    })
   } finally {
     categorySubmitting.value = false
   }
@@ -395,15 +420,30 @@ const submitTask = async () => {
       if (taskIndex !== -1) {
         tasks.value[taskIndex] = updatedTask
       }
+      toast({
+        title: "Task Updated",
+        description: `"${taskData.title}" has been updated successfully.`,
+        variant: "success",
+      })
     } else {
       // Create new task
       const newTask = await taskApi.createTask(taskData)
       tasks.value.push(newTask)
+      toast({
+        title: "Task Created",
+        description: `"${taskData.title}" has been added to your tasks.`,
+        variant: "success",
+      })
     }
 
     closeModal()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to save task'
+    toast({
+      title: "Error",
+      description: error.value,
+      variant: "destructive",
+    })
   } finally {
     submitting.value = false
   }
@@ -416,8 +456,18 @@ const toggleTaskComplete = async (task: Task) => {
     if (taskIndex !== -1) {
       tasks.value[taskIndex] = updatedTask
     }
+    toast({
+      title: updatedTask.completed ? "Task Completed" : "Task Reopened",
+      description: `"${task.title}" has been ${updatedTask.completed ? 'completed' : 'reopened'}.`,
+      variant: "success",
+    })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to update task status'
+    toast({
+      title: "Error",
+      description: error.value,
+      variant: "destructive",
+    })
   }
 }
 
@@ -439,14 +489,25 @@ const cancelDeleteTask = () => {
 const confirmDeleteTask = async () => {
   if (!taskToDelete.value) return
 
+  const taskTitle = taskToDelete.value.title
   deletingTask.value = true
   try {
     await taskApi.deleteTask(taskToDelete.value.id)
     tasks.value = tasks.value.filter(task => task.id !== taskToDelete.value!.id)
     showDeleteTaskDialog.value = false
     taskToDelete.value = null
+    toast({
+      title: "Task Deleted",
+      description: `"${taskTitle}" has been deleted successfully.`,
+      variant: "success",
+    })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to delete task'
+    toast({
+      title: "Error",
+      description: error.value,
+      variant: "destructive",
+    })
   } finally {
     deletingTask.value = false
   }
