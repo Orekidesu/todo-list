@@ -169,4 +169,14 @@ export const categoryApi = {
       throw error
     }
   },
+
+  // Delete a category
+  async deleteCategory(categoryId: number): Promise<void> {
+    try {
+      await api.delete(`/categories/${categoryId}`)
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      throw error
+    }
+  },
 }
