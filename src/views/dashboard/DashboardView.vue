@@ -269,11 +269,16 @@ const fetchCategories = async () => {
 const openCreateModal = () => {
   isEditing.value = false
   editingTaskId.value = null
+
+  // Set default due date to today
+  const today = new Date()
+  const todayString = today.toISOString().split('T')[0]
+
   taskForm.value = {
     title: '',
     description: '',
     category_id: '',
-    due_date: ''
+    due_date: todayString
   }
   showModal.value = true
 }
