@@ -52,7 +52,7 @@
 
     <!-- Category Creation Modal -->
     <CategoryModal v-if="showCategoryModal" v-model:category-name="categoryForm.name" :submitting="categorySubmitting"
-      @close="closeCategoryModal" @submit="submitCategory" />
+      :existing-categories="categories" @close="closeCategoryModal" @submit="submitCategory" />
   </div>
 </template>
 
@@ -271,7 +271,8 @@ const submitCategory = async () => {
   categorySubmitting.value = true
 
   try {
-    const newCategory = await categoryApi.createCategory(categoryForm.value.name)
+    const trimmedName = categoryForm.value.name.trim()
+    const newCategory = await categoryApi.createCategory(trimmedName)
     categories.value.push(newCategory)
 
     // If creating category from task modal, select it automatically
