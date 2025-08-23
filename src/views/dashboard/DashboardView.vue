@@ -7,8 +7,8 @@
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div class="px-4 sm:px-0">
         <!-- Dashboard Title -->
-                <!-- Dashboard Header -->
-        <DashboardTitle @add-task="openCreateModal" @add-category="openCategoryModal" @manage-categories="openCategoryManager" />
+        <!-- Dashboard Header -->
+        <DashboardTitle @add-task="openCreateModal" @manage-categories="openCategoryManager" />
 
         <!-- Error State -->
         <ErrorMessage :error="error" />
@@ -56,8 +56,33 @@
       :existing-categories="categories" @close="closeCategoryModal" @submit="submitCategory" />
 
     <!-- Category Manager Modal -->
-    <CategoryManager v-if="showCategoryManager" :categories="categories" :tasks="tasks" 
-      @close="closeCategoryManager" @add-category="openCategoryModalFromManager" @delete-category="deleteCategory" />
+    <CategoryManager v-if="showCategoryManager" :categories="categories" :tasks="tasks" @close="closeCategoryManager"
+      @add-category="openCategoryModalFromManager" @delete-category="deleteCategory" />
+
+    <!-- Delete Task Alert Dialog -->
+    <AlertDialog v-model:open="showDeleteTaskDialog">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Task</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete the task "{{ taskToDelete?.title }}"?
+            <br><br>
+            This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="cancelDeleteTask">Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDeleteTask" class="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            :disabled="deletingTask">
+            <div v-if="deletingTask" class="flex items-center">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Deleting...
+            </div>
+            <span v-else>Delete Task</span>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
@@ -79,6 +104,16 @@ import TaskModal from '@/components/dashboard/TaskModal.vue'
 import CategoryModal from '@/components/dashboard/CategoryModal.vue'
 import CategoryManager from '@/components/dashboard/CategoryManager.vue'
 import ErrorMessage from '@/components/dashboard/ErrorMessage.vue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 const auth = useAuth()
 
@@ -109,6 +144,11 @@ const isCreatingCategoryFromTask = ref(false)
 
 // Category manager modal state
 const showCategoryManager = ref(false)
+
+// Delete task dialog state
+const showDeleteTaskDialog = ref(false)
+const taskToDelete = ref<Task | null>(null)
+const deletingTask = ref(false)
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -293,10 +333,10 @@ const openCategoryModalFromManager = () => {
 const deleteCategory = async (categoryId: number) => {
   try {
     await categoryApi.deleteCategory(categoryId)
-    
+
     // Remove category from local state
     categories.value = categories.value.filter(category => category.id !== categoryId)
-    
+
     // Update tasks that had this category to have no category (null)
     tasks.value = tasks.value.map(task => {
       if (task.category && task.category.id === categoryId) {
@@ -304,13 +344,13 @@ const deleteCategory = async (categoryId: number) => {
       }
       return task
     })
-    
+
     // Clear category filter if the deleted category was selected
-    if (selectedCategory.value && 
-        categories.value.find(cat => cat.name === selectedCategory.value) === undefined) {
+    if (selectedCategory.value &&
+      categories.value.find(cat => cat.name === selectedCategory.value) === undefined) {
       selectedCategory.value = ''
     }
-    
+
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to delete category'
   }
@@ -382,15 +422,33 @@ const toggleTaskComplete = async (task: Task) => {
 }
 
 const deleteTask = async (taskId: number) => {
-  if (!confirm('Are you sure you want to delete this task?')) {
-    return
-  }
+  const task = tasks.value.find(t => t.id === taskId)
+  if (!task) return
 
+  taskToDelete.value = task
+  showDeleteTaskDialog.value = true
+}
+
+// Handle cancel delete
+const cancelDeleteTask = () => {
+  showDeleteTaskDialog.value = false
+  taskToDelete.value = null
+}
+
+// Handle confirm delete
+const confirmDeleteTask = async () => {
+  if (!taskToDelete.value) return
+
+  deletingTask.value = true
   try {
-    await taskApi.deleteTask(taskId)
-    tasks.value = tasks.value.filter(task => task.id !== taskId)
+    await taskApi.deleteTask(taskToDelete.value.id)
+    tasks.value = tasks.value.filter(task => task.id !== taskToDelete.value!.id)
+    showDeleteTaskDialog.value = false
+    taskToDelete.value = null
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to delete task'
+  } finally {
+    deletingTask.value = false
   }
 }
 
