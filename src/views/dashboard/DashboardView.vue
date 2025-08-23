@@ -7,7 +7,8 @@
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div class="px-4 sm:px-0">
         <!-- Dashboard Title -->
-        <DashboardTitle @add-task="openCreateModal" @add-category="openCategoryModal" />
+                <!-- Dashboard Header -->
+        <DashboardTitle @add-task="openCreateModal" @add-category="openCategoryModal" @manage-categories="openCategoryManager" />
 
         <!-- Error State -->
         <ErrorMessage :error="error" />
@@ -52,7 +53,11 @@
 
     <!-- Category Creation Modal -->
     <CategoryModal v-if="showCategoryModal" v-model:category-name="categoryForm.name" :submitting="categorySubmitting"
-      @close="closeCategoryModal" @submit="submitCategory" />
+      :existing-categories="categories" @close="closeCategoryModal" @submit="submitCategory" />
+
+    <!-- Category Manager Modal -->
+    <CategoryManager v-if="showCategoryManager" :categories="categories" :tasks="tasks" 
+      @close="closeCategoryManager" @add-category="openCategoryModalFromManager" @delete-category="deleteCategory" />
   </div>
 </template>
 
@@ -72,6 +77,7 @@ import EmptyState from '@/components/dashboard/EmptyState.vue'
 import NoResults from '@/components/dashboard/NoResults.vue'
 import TaskModal from '@/components/dashboard/TaskModal.vue'
 import CategoryModal from '@/components/dashboard/CategoryModal.vue'
+import CategoryManager from '@/components/dashboard/CategoryManager.vue'
 import ErrorMessage from '@/components/dashboard/ErrorMessage.vue'
 
 const auth = useAuth()
@@ -101,6 +107,9 @@ const categoryForm = ref({
 })
 const isCreatingCategoryFromTask = ref(false)
 
+// Category manager modal state
+const showCategoryManager = ref(false)
+
 const searchQuery = ref('')
 const selectedCategory = ref('')
 const selectedStatus = ref('')
@@ -111,7 +120,9 @@ const draggedIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
 
 const uniqueCategories = computed(() => {
-  const categoryNames = tasks.value.map(task => task.category.name)
+  const categoryNames = tasks.value
+    .filter(task => task.category !== null)
+    .map(task => task.category!.name)
   return [...new Set(categoryNames)]
 })
 
@@ -137,7 +148,11 @@ const filteredTasks = computed(() => {
   }
 
   if (selectedCategory.value) {
-    filtered = filtered.filter(task => task.category.name === selectedCategory.value)
+    if (selectedCategory.value === '__no_category__') {
+      filtered = filtered.filter(task => task.category === null)
+    } else {
+      filtered = filtered.filter(task => task.category?.name === selectedCategory.value)
+    }
   }
 
   if (selectedStatus.value) {
@@ -228,7 +243,7 @@ const openEditModal = (task: Task) => {
   taskForm.value = {
     title: task.title,
     description: task.description,
-    category_id: task.category.id.toString(),
+    category_id: task.category ? task.category.id.toString() : '',
     due_date: task.due_date.split('T')[0]
   }
   showModal.value = true
@@ -261,11 +276,52 @@ const closeCategoryModal = () => {
   isCreatingCategoryFromTask.value = false
 }
 
+// Category manager functions
+const openCategoryManager = () => {
+  showCategoryManager.value = true
+}
+
+const closeCategoryManager = () => {
+  showCategoryManager.value = false
+}
+
+const openCategoryModalFromManager = () => {
+  showCategoryManager.value = false
+  openCategoryModal()
+}
+
+const deleteCategory = async (categoryId: number) => {
+  try {
+    await categoryApi.deleteCategory(categoryId)
+    
+    // Remove category from local state
+    categories.value = categories.value.filter(category => category.id !== categoryId)
+    
+    // Update tasks that had this category to have no category (null)
+    tasks.value = tasks.value.map(task => {
+      if (task.category && task.category.id === categoryId) {
+        return { ...task, category: null }
+      }
+      return task
+    })
+    
+    // Clear category filter if the deleted category was selected
+    if (selectedCategory.value && 
+        categories.value.find(cat => cat.name === selectedCategory.value) === undefined) {
+      selectedCategory.value = ''
+    }
+    
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to delete category'
+  }
+}
+
 const submitCategory = async () => {
   categorySubmitting.value = true
 
   try {
-    const newCategory = await categoryApi.createCategory(categoryForm.value.name)
+    const trimmedName = categoryForm.value.name.trim()
+    const newCategory = await categoryApi.createCategory(trimmedName)
     categories.value.push(newCategory)
 
     // If creating category from task modal, select it automatically
@@ -289,7 +345,7 @@ const submitTask = async () => {
       title: taskForm.value.title,
       description: taskForm.value.description,
       due_date: taskForm.value.due_date,
-      category_id: parseInt(taskForm.value.category_id)
+      category_id: taskForm.value.category_id ? parseInt(taskForm.value.category_id) : null
     }
 
     if (isEditing.value && editingTaskId.value) {

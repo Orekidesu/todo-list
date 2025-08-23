@@ -49,7 +49,7 @@ export const taskApi = {
     title: string
     description: string
     due_date: string
-    category_id: number
+    category_id: number | null
   }): Promise<Task> {
     try {
       const response = await api.post<ApiResponse<TaskResponse>>('/tasks', {
@@ -80,7 +80,7 @@ export const taskApi = {
       title: string
       description: string
       due_date: string
-      category_id: number
+      category_id: number | null
     },
   ): Promise<Task> {
     try {
@@ -105,7 +105,7 @@ export const taskApi = {
   // Toggle task completion status
   async toggleTaskComplete(taskId: number, completed: boolean): Promise<Task> {
     try {
-      const response = await api.patch<ApiResponse<TaskResponse>>(`/tasks/${taskId}/toggle`, {
+      const response = await api.put<ApiResponse<TaskResponse>>(`/tasks/${taskId}`, {
         is_completed: completed,
       })
 
@@ -166,6 +166,16 @@ export const categoryApi = {
       }
     } catch (error) {
       console.error('Error creating category:', error)
+      throw error
+    }
+  },
+
+  // Delete a category
+  async deleteCategory(categoryId: number): Promise<void> {
+    try {
+      await api.delete(`/categories/${categoryId}`)
+    } catch (error) {
+      console.error('Error deleting category:', error)
       throw error
     }
   },
