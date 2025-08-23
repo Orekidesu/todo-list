@@ -14,74 +14,112 @@
 
       <!-- Desktop Navigation -->
       <div class="ml-auto flex items-center space-x-4">
-        <div class="hidden md:flex items-center space-x-3">
-          <div
-            class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-            <span class="text-sm font-medium text-white">
-              {{ user?.first_name?.charAt(0) }}{{ user?.last_name?.charAt(0) }}
-            </span>
-          </div>
-          <div class="text-right">
-            <p class="text-sm font-medium text-gray-900">
-              {{ user?.first_name }} {{ user?.last_name }}
-            </p>
-            <p class="text-xs text-gray-500">{{ user?.email }}</p>
-          </div>
-        </div>
-
-        <div class="md:hidden flex items-center">
-          <Button variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0">
+        <!-- Desktop User Dropdown -->
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            class="hidden md:flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors cursor-pointer">
             <div
-              class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-              <span class="text-xs font-medium text-white">
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
+              <span class="text-sm font-medium text-white">
                 {{ user?.first_name?.charAt(0) }}{{ user?.last_name?.charAt(0) }}
               </span>
             </div>
-          </Button>
-        </div>
+            <div class="text-right">
+              <p class="text-sm font-medium text-gray-900">
+                {{ user?.first_name }} {{ user?.last_name }}
+              </p>
+              <p class="text-xs text-gray-500">{{ user?.email }}</p>
+            </div>
+            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" class="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem @click="$emit('logout')" :disabled="loading"
+              class="cursor-pointer text-red-600 focus:text-red-700">
+              <div v-if="loading" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                  </path>
+                </svg>
+                Signing out...
+              </div>
+              <div v-else class="flex items-center">
+                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                  </path>
+                </svg>
+                Sign Out
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-        <!-- Logout Button -->
-        <Button variant="outline" size="sm" @click="$emit('logout')" :disabled="loading"
-          class="relative overflow-hidden transition-all duration-200 hover:shadow-md">
-          <div v-if="loading" class="flex items-center">
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            <span class="hidden sm:inline">Signing out...</span>
-            <span class="sm:hidden">...</span>
-          </div>
-          <div v-else class="flex items-center">
-            <svg class="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-              </path>
-            </svg>
-            <span class="hidden sm:inline">Sign Out</span>
-          </div>
-        </Button>
+        <!-- Mobile User Dropdown -->
+        <DropdownMenu>
+          <DropdownMenuTrigger class="md:hidden flex items-center">
+            <Button variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0">
+              <div
+                class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
+                <span class="text-xs font-medium text-white">
+                  {{ user?.first_name?.charAt(0) }}{{ user?.last_name?.charAt(0) }}
+                </span>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" class="w-56">
+            <DropdownMenuLabel>
+              <div>
+                <p class="text-sm font-medium text-gray-900">
+                  {{ user?.first_name }} {{ user?.last_name }}
+                </p>
+                <p class="text-xs text-gray-500">{{ user?.email }}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem @click="$emit('logout')" :disabled="loading"
+              class="cursor-pointer text-red-600 focus:text-red-700">
+              <div v-if="loading" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                  </path>
+                </svg>
+                Signing out...
+              </div>
+              <div v-else class="flex items-center">
+                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                  </path>
+                </svg>
+                Sign Out
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
 
-    <!-- Mobile User Info Bar - Visible on small screens when needed -->
-    <div class="md:hidden border-t bg-gray-50/50 px-4 py-2">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-900">
-            {{ user?.first_name }} {{ user?.last_name }}
-          </p>
-          <p class="text-xs text-gray-500">{{ user?.email }}</p>
-        </div>
-
-      </div>
-    </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface AuthUser {
   id: number
