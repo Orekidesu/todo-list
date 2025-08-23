@@ -13,8 +13,15 @@ dist
 dist-ssr
 coverage
 *.local
+
+# Environment files - Add these lines
+.env
+.env.development
+.env.production
+.env.staging
+.env.test
 .env.local
-.env.*.local  
+.env.*.local
 
 /cypress/videos/
 /cypress/screenshots/
