@@ -50,17 +50,63 @@ A modern, responsive TODO list application built with Vue 3, TypeScript, and Tai
 ## 📁 Project Structure
 
 ```
-src/
-├── components/
-│   └── ui/
-│       └── toast/          # Toast notification components
-├── data/
-│   └── dummyData.ts        # Sample todo data
-├── lib/
-│   └── utils.ts            # Utility functions
-├── style.css               # Global styles & CSS variables
-└── main.ts                 # Application entry point
+todo-list/
+├── public/                 # Static assets
+│   ├── favicon.svg        # Application favicon
+│   └── ...
+├── src/
+│   ├── components/
+│   │   ├── dashboard/     # Dashboard-specific components
+│   │   │   ├── CategoryManager.vue      # Category CRUD operations
+│   │   │   ├── DashboardHeader.vue      # Header with theme toggle
+│   │   │   ├── DashboardTitle.vue       # Page title with action buttons
+│   │   │   ├── EmptyState.vue          # No tasks placeholder
+│   │   │   ├── NoResults.vue           # No search results state
+│   │   │   ├── StatsCards.vue          # Task statistics cards
+│   │   │   ├── TaskFilters.vue         # Search and filter controls
+│   │   │   ├── TaskGrid.vue            # Task cards with drag & drop
+│   │   │   └── TaskModal.vue           # Task create/edit modal
+│   │   └── ui/            # Reusable UI components
+│   │       ├── button/    # Button component variants
+│   │       ├── dialog/    # Modal dialog components
+│   │       ├── input/     # Form input components
+│   │       ├── select/    # Dropdown select components
+│   │       └── toast/     # Notification components
+│   ├── composables/       # Vue composition functions
+│   │   ├── useAuth.ts     # Authentication logic
+│   │   └── ...
+│   ├── data/
+│   │   └── dummyData.ts   # Sample tasks & categories data
+│   ├── lib/
+│   │   └── utils.ts       # Utility functions (cn, clsx)
+│   ├── services/
+│   │   └── taskApi.ts     # API service layer
+│   ├── views/
+│   │   └── dashboard/
+│   │       └── DashboardView.vue  # Main dashboard page
+│   ├── style.css          # Global styles & CSS custom properties
+│   └── main.ts            # Application entry point
+├── .env                   # Environment variables (not in repo)
+├── .env.development       # Development environment config
+├── .gitignore            # Git ignore rules
+├── eslint.config.ts      # ESLint configuration
+├── index.html            # HTML entry point
+├── package.json          # Dependencies & scripts
+├── postcss.config.js     # PostCSS configuration
+├── tailwind.config.js    # Tailwind CSS configuration
+├── tsconfig.json         # TypeScript configuration
+├── vite.config.ts        # Vite build configuration
+└── README.md             # Project documentation
 ```
+
+### Key Directories Explained
+
+- **`src/components/dashboard/`** - All dashboard-specific Vue components including task management, statistics, and filtering
+- **`src/components/ui/`** - Reusable UI components following shadcn/ui patterns with TypeScript variants
+- **`src/composables/`** - Vue 3 composition functions for shared logic (auth, API calls, etc.)
+- **`src/services/`** - API service layer for backend communication
+- **`src/views/`** - Page-level Vue components (router views)
+- **`src/lib/`** - Utility functions and shared TypeScript helpers
 
 ## 🔧 Available Scripts
 
