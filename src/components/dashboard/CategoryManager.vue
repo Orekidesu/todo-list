@@ -18,9 +18,9 @@
         <div v-if="categories.length === 0" class="text-center py-8 text-gray-500">
           No categories found. Create your first category!
         </div>
-        
+
         <div v-else class="space-y-3">
-          <div v-for="category in categories" :key="category.id" 
+          <div v-for="category in categories" :key="category.id"
             class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
             <div class="flex items-center space-x-3">
               <div class="p-2 bg-green-100 rounded-full">
@@ -35,9 +35,8 @@
                 <p class="text-sm text-gray-500">{{ getTaskCount(category.id) }} tasks</p>
               </div>
             </div>
-            
-            <Button variant="outline" size="sm" 
-              @click="handleDeleteCategory(category)"
+
+            <Button variant="outline" size="sm" @click="handleDeleteCategory(category)"
               class="text-red-600 hover:text-red-700 hover:bg-red-50">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -79,8 +78,7 @@
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel @click="cancelDelete">Cancel</AlertDialogCancel>
-          <AlertDialogAction @click="confirmDelete" 
-            class="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+          <AlertDialogAction @click="confirmDelete" class="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             :disabled="deleting">
             <div v-if="deleting" class="flex items-center">
               <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -145,7 +143,7 @@ const cancelDelete = () => {
 // Confirm delete
 const confirmDelete = async () => {
   if (!categoryToDelete.value) return
-  
+
   deleting.value = true
   try {
     emit('deleteCategory', categoryToDelete.value.id)

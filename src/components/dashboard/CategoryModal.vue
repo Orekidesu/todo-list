@@ -22,23 +22,23 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               :class="{ 'border-red-300 focus:ring-red-500 focus:border-red-300': isDuplicate }"
               placeholder="Enter category name" />
-            
+
             <!-- Duplicate Error Message -->
             <div v-if="isDuplicate" class="mt-1 text-sm text-red-600">
               A category with this name already exists (case-insensitive)
             </div>
-            
+
             <!-- Similar Categories Suggestions -->
             <div v-else-if="similarCategories.length > 0 && categoryName.trim()" class="mt-1 text-sm text-amber-600">
-              Similar categories exist: 
+              Similar categories exist:
               <span v-for="(category, index) in similarCategories" :key="category.id">
-                <button type="button" @click="$emit('update:categoryName', category.name)" 
+                <button type="button" @click="$emit('update:categoryName', category.name)"
                   class="text-amber-700 hover:text-amber-800 underline">
                   {{ category.name }}
                 </button><span v-if="index < similarCategories.length - 1">, </span>
               </span>
             </div>
-            
+
             <!-- Validation Messages -->
             <div v-else-if="categoryName && !isValidName" class="mt-1 text-sm text-gray-500">
               Category name must be at least 2 characters long
