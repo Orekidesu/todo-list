@@ -105,7 +105,7 @@ export const taskApi = {
   // Toggle task completion status
   async toggleTaskComplete(taskId: number, completed: boolean): Promise<Task> {
     try {
-      const response = await api.patch<ApiResponse<TaskResponse>>(`/tasks/${taskId}/toggle`, {
+      const response = await api.put<ApiResponse<TaskResponse>>(`/tasks/${taskId}`, {
         is_completed: completed,
       })
 
